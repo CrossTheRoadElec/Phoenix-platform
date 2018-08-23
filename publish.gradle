@@ -1,0 +1,167 @@
+apply plugin: 'maven-publish'
+
+// Ensure that the WPILibVersioningPlugin is setup by setting the release type, if releaseType wasn't
+// already specified on the command line
+if (!hasProperty('releaseType')) {
+    WPILibVersion {
+        releaseType = 'dev'
+    }
+}
+
+ext.licenseFile = files("$rootDir/LICENSE.txt")
+
+def pubVersion = '1.0.0'
+
+def outputsFolder = file("$buildDir/allOutputs")
+
+def versionFile = file("$outputsFolder/version.txt")
+
+task outputVersions() {
+    description = 'Prints the versions of wpilib to a file for use by the downstream packaging project'
+    group = 'Build'
+    outputs.files(versionFile)
+
+    doFirst {
+        buildDir.mkdir()
+        outputsFolder.mkdir()
+    }
+
+    doLast {
+        versionFile.write pubVersion
+    }
+}
+
+task libraryBuild() {}
+
+build.dependsOn outputVersions
+
+task copyAllOutputs(type: Copy) {
+    destinationDir outputsFolder
+}
+
+build.dependsOn copyAllOutputs
+copyAllOutputs.dependsOn outputVersions
+
+ext.addTaskToCopyAllOutputs = { task ->
+    copyAllOutputs.dependsOn task
+    copyAllOutputs.inputs.file task.archivePath
+    copyAllOutputs.from task.archivePath
+}
+
+def artifactGroupId = 'com.ctre.phoenix'
+
+def cppHeadersZipTasks = [:]
+def zipBaseNames = [:]
+
+//Dynamic task generation
+project.platforms.each{
+    key, value ->
+    zipBaseNames.put(key, "_GROUP_com_ctre_phoenix_Platform_ID_Platform_${key}_CLS")
+    def thisTask = tasks.create(name: "cppHeadersZip_${key}", type: Zip) {
+        destinationDir = outputsFolder
+        baseName = zipBaseNames.get(key)
+        classifier = "headers"
+
+        from(licenseFile) {
+            into '/'
+        }
+
+        from("src/main/${value.supportedOS}/${key}/include") {
+            into '/'
+        }
+        from("src/include") { //General includes (Platform.h etc)
+            into '/'
+        }
+    }
+    
+    cppHeadersZipTasks.put(key, thisTask)
+    build.dependsOn thisTask
+    addTaskToCopyAllOutputs(thisTask)
+}
+
+model {
+    publishing {
+        def platformTaskLists = [:]
+        def allTaskList = [:]
+        project.platforms.each{
+            key, value ->
+            platformTaskLists.put(key, createComponentZipTasks($.components, value.libName, zipBaseNames.get(key), Zip, project, includeStandardZipFormat))
+            if (!project.hasProperty('jenkinsBuild')) {
+                allTaskList.put(key, createAllCombined(platformTaskLists.get(key), value.libName, zipBaseNames.get(key), Zip, project))
+            }
+        }
+        //A new publication registry will need to be added per platform
+        publications {
+            cpp_stub(MavenPublication) {
+                platformTaskLists.get('stub').each {
+                    artifact it
+                }
+                if (!project.hasProperty('jenkinsBuild')) {
+                    artifact allTaskList.get('stub')
+                }
+
+                artifact cppHeadersZipTasks.get('stub')
+ 
+                artifactId = "platform-stub"
+                groupId artifactGroupId
+                version pubVersion
+            }
+            cpp_sim(MavenPublication) {
+                platformTaskLists.get('sim').each {
+                    artifact it
+                }
+                if (!project.hasProperty('jenkinsBuild')) {
+                    artifact allTaskList.get('sim')
+                }
+
+                artifact cppHeadersZipTasks.get('sim')
+ 
+                artifactId = "platform-sim"
+                groupId artifactGroupId
+                version pubVersion
+            }
+            cpp_socketcan(MavenPublication) {
+                platformTaskLists.get('socketcan').each {
+                    artifact it
+                }
+                if (!project.hasProperty('jenkinsBuild')) {
+                    artifact allTaskList.get('socketcan')
+                }
+
+                artifact cppHeadersZipTasks.get('socketcan')
+ 
+                artifactId = "platform-socketcan"
+                groupId artifactGroupId
+                version pubVersion
+            }
+            cpp_ics(MavenPublication) {
+                platformTaskLists.get('ics').each {
+                    artifact it
+                }
+                if (!project.hasProperty('jenkinsBuild')) {
+                    artifact allTaskList.get('ics')
+                }
+
+                artifact cppHeadersZipTasks.get('ics')
+ 
+                artifactId = "platform-ics"
+                groupId artifactGroupId
+                version pubVersion
+            }
+            cpp_somethingb(MavenPublication) {
+                platformTaskLists.get('somethingb').each {
+                    artifact it
+                }
+                if (!project.hasProperty('jenkinsBuild')) {
+                    artifact allTaskList.get('somethingb')
+                }
+
+                artifact cppHeadersZipTasks.get('somethingb')
+ 
+                artifactId = "platform-somethingb"
+                groupId artifactGroupId
+                version pubVersion
+            }
+        }
+    }
+}

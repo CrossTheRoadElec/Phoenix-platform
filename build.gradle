@@ -1,0 +1,197 @@
+plugins {
+  id 'cpp'
+  id 'edu.wpi.first.NativeUtils' version '1.7.0'
+  id 'edu.wpi.first.wpilib.versioning.WPILibVersioningPlugin' version '2.1'
+}
+
+apply from: 'config.gradle'
+
+ext.sharedConfigsFirmwareSimHeaders = [CTRE_PhoenixPlatform_sim: []]
+
+//To make platform creation easier in gradle, a class is used to store the common info
+class PlatformParams {
+    String supportedOS 
+    String supportedArch 
+    String libName 
+    PlatformParams(supportedOS, supportedArch, libName) {
+        this.supportedOS = supportedOS
+        this.supportedArch = supportedArch
+        this.libName = libName
+    }
+}
+
+PlatformParams platform_stub = ['all', 'all', 'CTRE_PhoenixPlatform']
+PlatformParams platform_sim = ['all', 'all', 'CTRE_PhoenixPlatform_sim']
+PlatformParams platform_socketcan = ['linux', 'all', 'CTRE_PhoenixPlatform_socketcan']
+PlatformParams platform_ics = ['windows', 'all', 'CTRE_PhoenixPlatform_ics']
+PlatformParams platform_somethingb = ['osx', 'all', 'CTRE_PhoenixPlatform_somethingb']
+
+//These dictionary keys are also used part of the artifact name (like platform-sim)
+ext.platforms = ["stub" : platform_stub, 
+                 "sim" : platform_sim, 
+                 "socketcan" : platform_socketcan, 
+                 "ics" : platform_ics, 
+                 "somethingb" : platform_somethingb]
+//Everything depends on core
+ext.sharedConfigsCore = [CTRE_PhoenixPlatform : [], CTRE_PhoenixPlatform_sim : [], CTRE_PhoenixPlatform_socketcan : [], CTRE_PhoenixPlatform_ics : [], CTRE_PhoenixPlatform_somethingb : []]
+ext.sharedConfigsSim = [CTRE_PhoenixPlatform_sim : []]
+
+apply from: 'dependencies.gradle'
+
+def generalx86ExcludeSymbols = ['_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
+                                '_CT??_R0?AVbad_cast',
+                                '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
+                                '_TI5?AVfailure']
+def generalx64ExcludeSymbols = ['_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
+                                '_CT??_R0?AVbad_cast',
+                                '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
+                                '_TI5?AVfailure']
+//To add a new platform, just add a class to the dictionary above and copy each intance of someother platform 
+//(like stub) and find and replace stub with the new platforms name. This will need to be done in here and in  
+//publish.gradle
+
+model {
+  exportsConfigs {
+    CTRE_PhoenixPlatform(ExportsConfig) {
+      x86ExcludeSymbols = generalx86ExcludeSymbols  
+      x64ExcludeSymbols = generalx64ExcludeSymbols  
+    }
+    CTRE_PhoenixPlatform_sim(ExportsConfig) {
+      x86ExcludeSymbols = generalx86ExcludeSymbols  
+      x64ExcludeSymbols = generalx64ExcludeSymbols  
+    }
+    CTRE_PhoenixPlatform_socketcan(ExportsConfig) {
+      x86ExcludeSymbols = generalx86ExcludeSymbols  
+      x64ExcludeSymbols = generalx64ExcludeSymbols  
+    }
+    CTRE_PhoenixPlatform_ics(ExportsConfig) {
+      x86ExcludeSymbols = generalx86ExcludeSymbols  
+      x64ExcludeSymbols = generalx64ExcludeSymbols  
+    }
+    CTRE_PhoenixPlatform_somethingb(ExportsConfig) {
+      x86ExcludeSymbols = generalx86ExcludeSymbols  
+      x64ExcludeSymbols = generalx64ExcludeSymbols  
+    }
+  }
+  //Directory structure is infered from supported os and the name/key
+  components {
+    CTRE_PhoenixPlatform(NativeLibrarySpec) {
+      sources {
+        cpp {
+          source {
+            srcDirs "src/main/${platforms['stub'].supportedOS}/stub/cpp"
+            include '**/*.cpp'
+          }
+          exportedHeaders {
+            srcDirs = ["src/main/${platforms['stub'].supportedOS}/stub/include", "src/include"]
+          }
+        }
+      }
+      ext.supportedOS = platforms['stub'].supportedOS
+      ext.supportedArch = platforms['stub'].supportedArch
+    }
+    CTRE_PhoenixPlatform_sim(NativeLibrarySpec) {
+      sources {
+        cpp {
+          source {
+            srcDirs "src/main/${platforms['sim'].supportedOS}/sim/cpp"
+            include '**/*.cpp'
+          }
+          exportedHeaders {
+            srcDirs =  ["src/main/${platforms['sim'].supportedOS}/sim/include", "src/include"]
+          }
+        }
+      }
+      ext.supportedOS = platforms['sim'].supportedOS
+      ext.supportedArch = platforms['sim'].supportedArch
+      binaries.all {
+        if(it.targetPlatform.operatingSystem.name == 'windows'){
+                cppCompiler.define "_CRT_SECURE_NO_WARNINGS"
+        }
+      }
+    }
+    CTRE_PhoenixPlatform_socketcan(NativeLibrarySpec) {
+      sources {
+        cpp {
+          source {
+            srcDirs "src/main/${platforms['socketcan'].supportedOS}/socketcan/cpp"
+            include '**/*.cpp'
+          }
+          exportedHeaders {
+            srcDirs =  ["src/main/${platforms['socketcan'].supportedOS}/socketcan/include", "src/include"]
+          }
+        }
+      }
+      ext.supportedOS = platforms['socketcan'].supportedOS
+      ext.supportedArch = platforms['socketcan'].supportedArch
+    }
+    CTRE_PhoenixPlatform_ics(NativeLibrarySpec) {
+      sources {
+        cpp {
+          source {
+            srcDirs "src/main/${platforms['ics'].supportedOS}/ics/cpp"
+            include '**/*.cpp'
+          }
+          exportedHeaders {
+            srcDirs =  ["src/main/${platforms['ics'].supportedOS}/ics/include", "src/include"]
+          }
+        }
+      }
+      ext.supportedOS = platforms['ics'].supportedOS
+      ext.supportedArch = platforms['ics'].supportedArch
+    }
+    CTRE_PhoenixPlatform_somethingb(NativeLibrarySpec) {
+      sources {
+        cpp {
+          source {
+            srcDirs "src/main/${platforms['somethingb'].supportedOS}/somethingb/cpp"
+            include '**/*.cpp'
+          }
+          exportedHeaders {
+            srcDirs =  ["src/main/${platforms['somethingb'].supportedOS}/somethingb/include", "src/include"]
+          }
+        }
+      }
+      ext.supportedOS = platforms['somethingb'].supportedOS
+      ext.supportedArch = platforms['somethingb'].supportedArch
+    }
+  }
+  binaries {
+    withType(SharedLibraryBinarySpec) {
+      //Loop through the platform class dictionary. If the this library matches the libName, make sure the os and 
+      //arch are supported. If not, don't build
+      platforms.each{    
+        key, value ->  
+        if(value.libName == it.component.name) {
+          if((it.targetPlatform.operatingSystem.name != value.supportedOS && value.supportedOS != 'all') 
+            || (it.targetPlatform.architecture.name != value.supportedArch && value.supportedArch != 'all')) {
+            it.buildable = false
+          }
+          else {
+            it.buildable = !project.hasProperty("skip${key}")
+          }
+        }
+      }
+    }
+    withType(StaticLibraryBinarySpec) {
+      platforms.each{    
+        key, value ->  
+        if(value.libName == it.component.name) {
+          if((it.targetPlatform.operatingSystem.name != value.supportedOS && value.supportedOS != 'all') 
+            || (it.targetPlatform.architecture.name != value.supportedArch && value.supportedArch != 'all')) {
+            it.buildable = false
+          }
+          else {
+            it.buildable = !project.hasProperty("skip${key}")
+          }
+        }
+      }
+    }
+  }
+}
+
+apply from: 'publish.gradle'
+
+wrapper {
+  gradleVersion = '4.9'
+}

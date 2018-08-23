@@ -1,0 +1,32 @@
+model {
+    dependencyConfigs {
+        phoenixCore(DependencyConfig) {
+            groupId = 'com.ctre.phoenix'
+            artifactId = 'core'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            if(ext.hasProperty("coreVersion")){
+                version = ext.coreVersion
+            }
+            else{
+                version = '+'
+            }
+            sharedConfigs = project.sharedConfigsCore
+            staticConfigs = [:]
+        }
+        phoenixFirmwareSim(DependencyConfig) {
+            groupId = 'com.ctre.phoenix'
+            artifactId = 'firmware-sim'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            if(ext.hasProperty("firmwaresimVersion")){
+                version = ext.firwaresimVersion
+            }
+            else{
+                version = '+'
+            }
+            sharedConfigs = project.sharedConfigsSim
+            staticConfigs = [:]
+        }
+    }
+}
