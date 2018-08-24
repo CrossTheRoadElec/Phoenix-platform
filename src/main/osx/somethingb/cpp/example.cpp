@@ -18,7 +18,7 @@ namespace can {
 	{
 		return 0;
 	}
-	int32_t CANbus_ReceiveFrame(canframe_t * /*toFillArray*/, uint32_t /*capacity*/, uint32_t & /*numberFilled*/)
+	int32_t CANbus_ReceiveFrame(canframe_t * /*toFillArray*/, uint32_t /*capacity*/, uint32_t * /*numberFilled*/)
 	{
 		return 0;
 	}

@@ -158,11 +158,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\include\ctre\phoenix\ErrorCode.h" />
-    <ClInclude Include="src\include\ctre\phoenix\platform\Platform-pack.h" />
-    <ClInclude Include="src\include\ctre\phoenix\platform\Platform.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\main\windows\ics\cpp\icsneo40DLLAPI.cpp" />
     <ClCompile Include="src\main\windows\ics\cpp\Platform_icsneo40.cpp" />
   </ItemGroup>

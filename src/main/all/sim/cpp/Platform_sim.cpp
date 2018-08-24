@@ -277,10 +277,10 @@ namespace ctre {
 
 					return retval;
 				}
-				int32_t CANbus_ReceiveFrame(canframe_t * toFillArray, uint32_t capacity, uint32_t &numberFilled)
+				int32_t CANbus_ReceiveFrame(canframe_t * toFillArray, uint32_t capacity, uint32_t *numberFilled)
 				{
 					/* init outputs */
-					numberFilled = 0;
+					*numberFilled = 0;
 
 					/* scrutinize inputs */
 					if (capacity < 1)
@@ -315,7 +315,7 @@ namespace ctre {
 							toFill.timeStampUs = 0;
 							toFill.flags = 0;
 							std::memcpy(toFill.data, dataToFill, 8);
-							numberFilled = 1;
+							*numberFilled = 1;
 							
                             //std::cout << std::hex << "rec: " << toFill.arbID << std::endl    
         
