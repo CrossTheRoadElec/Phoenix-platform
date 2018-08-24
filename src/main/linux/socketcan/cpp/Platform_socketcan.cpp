@@ -75,7 +75,7 @@ namespace can {
 	{
         struct can_frame frame;
        
-        numberFilled = 0;
+        *numberFilled = 0;
 
         if(capacity <= 0) {
             return 0; //Shouldn't happen
