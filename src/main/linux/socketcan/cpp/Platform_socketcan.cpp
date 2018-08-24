@@ -100,7 +100,7 @@ namespace can {
             std::memcpy(toFillArray[0].data, frame.data, frame.can_dlc);
             toFillArray[0].dlc = frame.can_dlc;
             toFillArray[0].timeStampUs = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - 1530000000000);//take a bit off the top to ensure no overflow (shouldn't matter, but still...)
-            numberFilled = 1;
+            *numberFilled = 1;
         }
 
 		return 0;
