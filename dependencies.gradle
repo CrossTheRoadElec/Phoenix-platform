@@ -1,5 +1,6 @@
 model {
     dependencyConfigs {
+        //Header set
         phoenixCore(DependencyConfig) {
             groupId = 'com.ctre.phoenix'
             artifactId = 'core'
@@ -14,6 +15,7 @@ model {
             sharedConfigs = project.sharedConfigsCore
             staticConfigs = [:]
         }
+        //Required for platform-sim (needs a header)
         phoenixFirmwareSim(DependencyConfig) {
             groupId = 'com.ctre.phoenix'
             artifactId = 'firmware-sim'
