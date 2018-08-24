@@ -168,21 +168,36 @@ namespace ctre {
 					/* nothing to check here, but we could do a read test later */
 				}
 
+				/* not necessary - Ozrien*/
+				///* resolve desintatoin file into abs file path */
+				//if (retval == 0) {
+				//	char absPath[100];
+				//	char *res = _fullpath(absPath, tempDllName.c_str(), sizeof(absPath) - 1);
+				//	if (res) {
+				//		/* overwrite local file name with abs path */
+				//		tempDllName = res;
+				//	}
+				//	else {
+				//		/* could not resolve the dest file into a full path */
+				//		retval = ErrorCode::GeneralError;
+				//	}
+				//}
+
 				/* load the lib as a system resource */
 				if (retval == 0) {
 					try
 					{
 						lib->Open(tempDllName.c_str());
 					}
-					catch (runtime::LibLoaderException)
+					catch (const runtime::LibLoaderException & excep)
 					{
 						/* DLL contents must not be good */
-						retval = ErrorCode::GeneralError;
+						retval = excep.GetPhoenixErrorCode();
 					}
 				}
 
 				/* no need to keep the copy, remove it from the file sys regardless of success. */
-				remove(tempDllName.c_str());
+				(void)remove(tempDllName.c_str()); /* this will fail in Windows, ignore for now */
 
 				/* call the start routine */
 				if (retval == 0) {
@@ -191,10 +206,10 @@ namespace ctre {
 						/* call our first routine from the loaded resource*/
 						retval = LIBLOADER_LOOKUP(*lib, ctre_phoenix_simulation_adapter_Start)(id);
 					}
-					catch (runtime::LibLoaderException)
+					catch (const runtime::LibLoaderException & excep)
 					{
 						/* DLL was good but func is missing? */
-						retval = ErrorCode::GeneralError;
+						retval = excep.GetPhoenixErrorCode();
 					}
 				}
 
@@ -269,8 +284,8 @@ namespace ctre {
 						try {
 							err = LIBLOADER_LOOKUP(*lib, ctre_phoenix_simulation_adapter_SendCANFrame)(messageID, data, dataSize);
 						}
-						catch (runtime::LibLoaderException) {
-							err = -1;
+						catch (const runtime::LibLoaderException & excep) {
+							err = excep.GetPhoenixErrorCode();
 						}
 						if (retval == 0) { retval = err; }
 					}
@@ -301,9 +316,9 @@ namespace ctre {
 						{
 							err = LIBLOADER_LOOKUP(*lib, ctre_phoenix_simulation_adapter_ReceiveCANFrame)(&messageID, dataToFill, &dataSizeFilled);
 						}
-						catch (runtime::LibLoaderException)
+						catch (const runtime::LibLoaderException & excep)
 						{
-							err = ErrorCode::GeneralError;
+							err = excep.GetPhoenixErrorCode();
 						}
 
 						if (err == 0)
